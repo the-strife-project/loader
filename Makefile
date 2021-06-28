@@ -11,7 +11,7 @@ loader.sus: $(RESULT)
 	@./elf2sus.py $<
 
 clean:
-	rm -rf obj ELF.elf ELF.sus
+	rm -rf obj loader.elf loader.sus
 
 %: force
 	@$(MAKE) -f ../helper/Makefile $@ --no-print-directory
