@@ -1,13 +1,12 @@
 export PROJNAME := loader
 export RESULT := loader.elf
-# There is no stdlib yet :^)
+# There's no stdlib yet
 export nostdlib := true
-export nostdlibh := true
 
 all: loader.sus
 
 loader.sus: $(RESULT)
-	@echo "[Loader] Creating USU..."
+	@echo "[Loader] Creating SUS..."
 	@./elf2sus.py $<
 
 clean:
