@@ -2,49 +2,66 @@
 #include <PageAlloc/PageAlloc.hpp>
 #include <utility>
 #include <syscalls>
-#include "syscalls/syscalls.hpp"
+#include "syscalls.hpp"
 
-extern "C" void _start(void* stdlibptr, size_t stdlibsz) {
+void map(PID pid, ELF& elf, size_t id);
+
+extern "C" void _start(void* ptr, size_t stdlibsz) {
 	// Loader starts loading stdlib and caching it
-	ELF stdlib(stdlibptr, stdlibsz);
-	stdlib.parseAndLoad();
+	ELF stdlib(ptr, stdlibsz);
+	stdlib.doit();
 
 	// Only the first time :p
 	bool doFree = false;
-	ELF elf(stdlib);
+	ELF elf = stdlib;
 
 	// Keep receiving programs from the kernel and returning maps
+	PID lastPID = 0;
+	uint64_t lastEntry = 0;
 	while(true) {
-		/*
-			Send to the kernel:
-			- Error
-			- Entry point
+		size_t sz = backFromLoader(lastPID, elf.getError(), lastEntry);
+		lastPID = 0;
+		lastEntry = 0;
 
-			Receive:
-			- Size of the new ELF at stdlibptr
-		*/
-		size_t sz = backFromLoader(elf.howItWent(), elf.getEntry());
-		if(sz){}
-
-		// Should free previous ("ELF")?
+		// Should free previous ("elf")?
 		if(doFree) {
-			//
+			// TODO (clearly)
+			*(uint64_t*)0x69 = 0;
+			while(true);
 		} else {
 			doFree = true;
 		}
 
-		// Parse ELF
+		elf = ELF(ptr, sz);
+		elf.doit();
+		if(elf.getError()) continue; // Any errors?
 
-		// New process
-		PID pid = makeProcess();
-		if(pid){}
+		// Need to create it now so ASLR can do its thing
+		lastPID = makeProcess();
 
-		// MapIns
+		// Tell me, "elf", what do you need?
+		size_t id = 1;
+		for(auto const& x : elf.getLibs()) {
+			if(x != "libstd.so") {
+				// TODO (clearly)
+				*(uint64_t*)0x420 = 0;
+			}
 
-		*(uint8_t*)0 = 0;
+			// Note for future me: when more libraries are supported, make sure
+			// there's a <set> for those loaded so, in case it's done recursively,
+			// none are loaded twice. Give it a thought.
+			elf.give(stdlib, aslrGet(lastPID, id));
+
+			map(lastPID, stdlib, id);
+
+			++id;
+		}
+
+		elf.finish();
+
+		lastEntry = aslrGet(lastPID, 0) + elf.getEntry();
+		map(lastPID, elf, 0);
+
+		// TODO: RELRO
 	}
-
-	/*asm volatile("syscall"
-	  :: "a" (0));*/
-	while(true);
 }

@@ -18,7 +18,7 @@ struct ELFHeader {
 	uint16_t e_shentsize;
 	uint16_t e_shnum;
 	uint16_t e_shstrndx;
-} __attribute__((packed));
+} __attribute__ ((packed));
 
 #define IDENT_64 2
 #define IDENT_LITTLE_ENDIAN 1
@@ -42,6 +42,56 @@ struct PHDR {
 			RELRO = 0x6474E552
 		};
 	};
-} __attribute__((packed));
+} __attribute__ ((packed));
+
+struct SHDR {
+	uint32_t sh_name;
+	uint32_t sh_type;
+	uint64_t sh_flags;
+	uint64_t sh_addr;
+	uint64_t sh_offset;
+	uint64_t sh_size;
+	uint32_t sh_link;
+	uint32_t sh_info;
+	uint64_t sh_addralign;
+	uint64_t sh_entsize;
+
+	struct Type {
+		// Pretty much only those I care about
+		enum {
+			STRTAB = 0x3,
+			DYNSYM = 0xB
+		};
+	};
+} __attribute__ ((packed));
+
+struct Symbol {
+	uint32_t st_name;
+	uint8_t st_info;
+	uint8_t st_other;
+	uint16_t st_shndx;
+	uint64_t st_value;
+	uint64_t st_size;
+} __attribute__ ((packed));
+
+struct Dynamic {
+	uint64_t d_tag;
+	union {
+		uint64_t d_value;
+		uint64_t d_addr;
+	} d_un;
+
+	struct Tag {
+		enum {
+			DT_NEEDED = 0x1
+		};
+	};
+} __attribute__ ((packed));
+
+struct RelocationEntry {
+	uint64_t r_offset;
+	uint64_t r_info;
+	uint64_t r_addend;
+} __attribute__ ((packed));
 
 #endif
