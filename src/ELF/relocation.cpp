@@ -34,17 +34,18 @@ void ELF::relocation() {
 			return;
 		}
 
-		uint32_t sym = entry->r_info >> 32;
+		uint32_t symidx = entry->r_info >> 32;
 
 		// Name ok?
 		// dynstr is safe since neededLibs() finished without errors
 		// neededLibs() has been executed because "libs" is not empty
-		if(sym >= dynstr->sh_size) {
+		if(symidx >= ndynsyms) {
 			error = std::Loader::Error::INVALID_OFFSET;
 			return;
 		}
 
-		std::string name = data + dynstr->sh_offset + sym;
+		// Safe to dereference since it was checked in findExports
+		std::string name = data + dynstr->sh_offset + rawdynsyms[symidx].st_name;
 
 		// Is the symbol exported by a needed library?
 		if(!whoGives[name]) {

@@ -35,7 +35,12 @@ private:
 	SHDR* shstrtab = nullptr; // Section with names of more sections
 	sections_t mapSections;
 
-	dynsyms_t dynsyms; // Exported symbols
+	size_t ndynsyms = 0;
+	SHDR* dynsymh = nullptr;
+	Symbol* rawdynsyms = nullptr;
+
+	dynsyms_t exported; // Exported symbols
+
 	SHDR* dynstr = nullptr;
 
 	libs_t libs; // Needed libraries
@@ -92,7 +97,7 @@ public:
 
 	inline pages_t& getPages() { return pages; }
 	inline uint64_t getEntry() const { return entry; }
-	inline dynsyms_t& getDynamicSymbols() { return dynsyms; }
+	inline dynsyms_t& getDynamicSymbols() { return exported; }
 	inline libs_t& getLibs() { return libs; }
 	inline perm_t& getPerms() { return perms; }
 
