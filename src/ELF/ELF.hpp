@@ -16,6 +16,7 @@ public:
 	typedef std::unordered_map<std::string, SHDR*> sections_t;
 	typedef std::unordered_map<std::string, uint64_t> dynsyms_t;
 	typedef std::unordered_set<std::string> libs_t;
+	typedef std::unordered_map<uint64_t, size_t> perm_t;
 
 private:
 	char* data = nullptr;
@@ -40,7 +41,13 @@ private:
 	libs_t libs; // Needed libraries
 	std::unordered_map<std::string, uint64_t> whoGives; // symbol -> addr
 
+	perm_t perms; // virt (process) -> permissions
+
 	inline bool validOffset(size_t off) { return off < sz; }
+	bool validRegion(size_t off, size_t sz);
+	inline bool safeProduct(size_t x, size_t y) {
+		return !__builtin_mul_overflow_p(x, y, 0ull);
+	}
 
 	// Steps. It's critical that they're done in order
 	void parseAndLoad(); // PHDRs, fills "pages"
@@ -48,7 +55,7 @@ private:
 	void findExports(); // Exported symbols, fills "dynsyms"
 	void findNeededLibs(); // Shared objects, fills "libs"
 	void relocation();
-	void makeRELRO();
+	void setPermissions();
 
 public:
 	ELF() = default;
@@ -74,13 +81,20 @@ public:
 	inline void finish() {
 		if(error) return;
 		relocation();
-		// makeRELRO
+		if(error) return;
+		setPermissions();
+
+		// From this point on, pointers relative to "data" are NOT safe
+		data = nullptr;
+		phdrs = nullptr;
+		sections = shstrtab = dynstr = nullptr;
 	}
 
 	inline pages_t& getPages() { return pages; }
 	inline uint64_t getEntry() const { return entry; }
 	inline dynsyms_t& getDynamicSymbols() { return dynsyms; }
 	inline libs_t& getLibs() { return libs; }
+	inline perm_t& getPerms() { return perms; }
 
 	bool safeStringsSection(SHDR*);
 

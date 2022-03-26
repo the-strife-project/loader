@@ -41,8 +41,12 @@ void ELF::parseAndLoad() {
 		return;
 	}
 
-	// Only have to check the last one to know all PHDRPs are safe
-	if(!validOffset(header->e_phoff + (nphdrs*sizeof(PHDR) - 1))) {
+	// Safe?
+	if(!safeProduct(nphdrs, sizeof(PHDR))) {
+		error = std::Loader::Error::INVALID_OFFSET;
+		return;
+	}
+	if(!validRegion(header->e_phoff, nphdrs*sizeof(PHDR))) {
 		error = std::Loader::Error::INVALID_OFFSET;
 		return;
 	}
@@ -51,7 +55,7 @@ void ELF::parseAndLoad() {
 	for(size_t i=0; i<nphdrs; ++i) {
 		PHDR* phdr = &phdrs[i];
 		// Check for valid contents
-		if(!validOffset(phdr->p_offset + phdr->p_filesz - 1)) {
+		if(!validRegion(phdr->p_offset, phdr->p_filesz)) {
 			error = std::Loader::Error::INVALID_OFFSET;
 			return;
 		}
@@ -60,11 +64,7 @@ void ELF::parseAndLoad() {
 		if(phdr->p_type != PHDR::Type::LOAD)
 			continue;
 
-		// How many pages are involved in this program header?
-		// (Looks complicated because of non-page alignment)
-		size_t npages = phdr->p_vaddr + phdr->p_memsz + (PAGE_SIZE - 1);
-		npages /= PAGE_SIZE;
-		npages -= phdr->p_vaddr / PAGE_SIZE;
+		size_t npages = phdr->npages();
 
 		// Current destination address
 		size_t vaddr = phdr->p_vaddr;
@@ -91,12 +91,12 @@ void ELF::parseAndLoad() {
 			// Remaining bytes until the end of the page
 			size_t szFile = std::min(PAGE_SIZE - (vaddr & 0xFFF), remainingFile);
 			memcpy(dst, faddr, szFile);
+			faddr += szFile;
+			remainingFile -= szFile;
 
 			size_t szMem = std::min(PAGE_SIZE - (vaddr & 0xFFF), remainingMem);
 			vaddr += szMem;
-			remainingMem  -= szMem;
-			faddr += szFile;
-			remainingFile -= szFile;
+			remainingMem -= szMem;
 		}
 	}
 }

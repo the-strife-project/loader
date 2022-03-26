@@ -11,13 +11,13 @@ inline size_t bitmapByte(size_t i) { return i / (sizeof(size_t) * 8); }
 inline size_t bitmapOff(size_t i)  { return i % (sizeof(size_t) * 8); }
 
 inline bool bitmapGet(size_t i) {
-	return bitmap[bitmapByte(i)] & (1 << bitmapOff(i));
+	return bitmap[bitmapByte(i)] & (1ull << bitmapOff(i));
 }
 inline void bitmapSet(size_t i, bool v) {
 	if(v)
-		bitmap[bitmapByte(i)] |= 1 << bitmapOff(i);
+		bitmap[bitmapByte(i)] |= 1ull << bitmapOff(i);
 	else
-		bitmap[bitmapByte(i)] &= ~(1 << bitmapOff(i));
+		bitmap[bitmapByte(i)] &= ~(1ull << bitmapOff(i));
 }
 
 void* allocp(size_t want) {
@@ -51,6 +51,10 @@ void* allocp(size_t want) {
 				++i; // After this, have and i are at the same page
 				for(size_t j=0; j<have; ++j) {
 					size_t bit = i-have+j;
+					if(bitmapGet(bit)) {
+						// Tried to allocate a used page
+						*(uint64_t*)0x11112 = 0;
+					}
 					bitmapSet(bit, true);
 				}
 				return (void*)ret;
@@ -72,8 +76,11 @@ void freep(void* page, size_t npages) {
 	size_t init = (size_t)page - (size_t)first;
 	init /= PAGE_SIZE;
 
-	if(npages) {}
-	for(size_t i=0; i<npages; ++i)
+	for(size_t i=0; i<npages; ++i) {
+		if(!bitmapGet(init+i)) {
+			// Tried to free a free page
+			*(uint64_t*)0x11111 = 0;
+		}
 		bitmapSet(init+i, false);
+	}
 }
-

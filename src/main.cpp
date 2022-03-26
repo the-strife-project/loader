@@ -4,12 +4,14 @@
 #include <syscalls>
 #include "syscalls.hpp"
 
-void map(PID pid, ELF& elf, size_t id);
+#define DO_COPY true
+void map(PID pid, ELF& elf, size_t id, bool copy=false);
 
 extern "C" void _start(void* ptr, size_t stdlibsz) {
 	// Loader starts loading stdlib and caching it
 	ELF stdlib(ptr, stdlibsz);
 	stdlib.doit();
+	stdlib.finish();
 
 	// Only the first time :p
 	bool doFree = false;
@@ -52,7 +54,7 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 			// none are loaded twice. Give it a thought.
 			elf.give(stdlib, aslrGet(lastPID, id));
 
-			map(lastPID, stdlib, id);
+			map(lastPID, stdlib, id, DO_COPY);
 
 			++id;
 		}

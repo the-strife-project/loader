@@ -53,15 +53,7 @@ void ELF::relocation() {
 		}
 
 		// Offset ok?
-		uint64_t pageCheck = entry->r_offset & ~0xFFF;
-		uint64_t local = 0;
-		for(auto const& x : pages) {
-			if(x.f == pageCheck) {
-				local = x.s;
-				break;
-			}
-		}
-
+		uint64_t local = pages[entry->r_offset & ~0xFFF];
 		if(!local) {
 			error = std::Loader::Error::INVALID_OFFSET;
 			return;

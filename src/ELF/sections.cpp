@@ -10,7 +10,11 @@ void ELF::parseSections() {
 	}
 
 	// Check if last section is within bounds
-	if(!validOffset(header->e_shoff + (nsections*sizeof(SHDR) - 1))) {
+	if(!safeProduct(nsections, sizeof(SHDR))) {
+		error = std::Loader::Error::INVALID_OFFSET;
+		return;
+	}
+	if(!validRegion(header->e_shoff, nsections*sizeof(SHDR))) {
 		error = std::Loader::Error::INVALID_OFFSET;
 		return;
 	}
@@ -20,14 +24,34 @@ void ELF::parseSections() {
 		SHDR* section = &sections[i];
 		if(section->sh_size == 0) continue;
 
-		if(!validOffset(section->sh_offset + section->sh_size - 1)) {
+		if(!validRegion(section->sh_offset, section->sh_size)) {
 			error = std::Loader::Error::INVALID_OFFSET;
 			return;
 		}
 
-		// Find .shstrtab
-		if(section->sh_name == 1)
-			shstrtab = section;
+		/*
+			It's critical to find ".shstrtab". It could be done in this
+			very loop. But how?
+			I have absolutely no idea. I thought for a moment that sh_name=1
+			for the section that has the names. Sounds convincing right? Wrong.
+			I saw that in an ELF and assumed that it would be the same for all.
+			It's not. It's random. LOOKS like it's the last section, but I'm
+			not falling in the same pithole twice.
+			Current approach: assume it's a string section, and look for its
+			own name in the offset given by sh_name.
+			It's the opposite of fail-proof, but the standard is of no help.
+		*/
+		if(!shstrtab && safeStringsSection(section)) {
+			// Could be. Name ok?
+			if(section->sh_name >= section->sh_size)
+				continue;
+			// Looks promising
+			std::string name = data + section->sh_offset + section->sh_name;
+			if(name == ".shstrtab") {
+				// Success!
+				shstrtab = section;
+			}
+		}
 	}
 
 	if(!shstrtab) {

@@ -3,6 +3,10 @@
 
 #define MAGIC 0x464C457F
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE (1 << 12)
+#endif
+
 struct ELFHeader {
 	char e_ident[16];
 	uint16_t e_type;
@@ -42,6 +46,15 @@ struct PHDR {
 			RELRO = 0x6474E552
 		};
 	};
+
+	// How many pages are involved in this program header?
+	inline size_t npages() {
+		// (Looks complicated because of non-page alignment)
+		size_t ret = p_vaddr + p_memsz + (PAGE_SIZE - 1);
+		ret /= PAGE_SIZE;
+		ret -= p_vaddr / PAGE_SIZE;
+		return ret;
+	}
 } __attribute__ ((packed));
 
 struct SHDR {
