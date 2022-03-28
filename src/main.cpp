@@ -13,8 +13,6 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 	stdlib.doit();
 	stdlib.finish();
 
-	// Only the first time :p
-	bool doFree = false;
 	ELF elf = stdlib;
 
 	// Keep receiving programs from the kernel and returning maps
@@ -25,14 +23,9 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 		lastPID = 0;
 		lastEntry = 0;
 
-		// Should free previous ("elf")?
-		if(doFree) {
-			// TODO (clearly)
-			*(uint64_t*)0x69 = 0;
-			while(true);
-		} else {
-			doFree = true;
-		}
+		// "elf" has been freed if necessary. mapIn unmounted the pages
+		//   from Loader's page table, and all "ptr"-relative are overwritten
+		//   since backFromLoader returned.
 
 		elf = ELF(ptr, sz);
 		elf.doit();

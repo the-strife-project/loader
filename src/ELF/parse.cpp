@@ -74,7 +74,7 @@ void ELF::parseAndLoad() {
 		size_t remainingFile = phdr->p_filesz;
 		size_t remainingMem  = phdr->p_memsz;
 
-		for(size_t j=0; j<npages; ++j) {
+		while(npages--) {
 			// If the page is not allocated, do it now
 			size_t page = vaddr & ~0xFFF;
 			if(!pages[page]) {
@@ -82,6 +82,7 @@ void ELF::parseAndLoad() {
 				if(!pages[page]) {
 					// TODO: just panic and free everything
 					error = std::Loader::Error::NO_MEMORY;
+					*(uint64_t*)0x69 = 0;
 					while(true);
 				}
 			}

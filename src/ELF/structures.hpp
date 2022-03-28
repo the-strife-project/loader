@@ -49,10 +49,10 @@ struct PHDR {
 
 	// How many pages are involved in this program header?
 	inline size_t npages() {
-		// (Looks complicated because of non-page alignment)
-		size_t ret = p_vaddr + p_memsz + (PAGE_SIZE - 1);
+		size_t ret = (p_vaddr + p_memsz - 1) & ~0xFFF;
+		ret -= p_vaddr & ~0xFFF;
+		ret += PAGE_SIZE;
 		ret /= PAGE_SIZE;
-		ret -= p_vaddr / PAGE_SIZE;
 		return ret;
 	}
 } __attribute__ ((packed));

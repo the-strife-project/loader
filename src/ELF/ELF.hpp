@@ -92,7 +92,8 @@ public:
 		// From this point on, pointers relative to "data" are NOT safe
 		data = nullptr;
 		phdrs = nullptr;
-		sections = shstrtab = dynstr = nullptr;
+		sections = shstrtab = dynsymh = dynstr = nullptr;
+		rawdynsyms = nullptr;
 	}
 
 	inline pages_t& getPages() { return pages; }
