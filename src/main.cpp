@@ -8,26 +8,26 @@
 void map(PID pid, ELF& elf, size_t id, bool copy=false);
 
 extern "C" void _start(void* ptr, size_t stdlibsz) {
-	// Loader starts loading stdlib and caching it
-	ELF stdlib(ptr, stdlibsz);
+	// This loader starts loading stdlib and caching it
+	// There would be no need to copy the whole ELF, but... Read "Careful now".
+	void* rawstdlib = std::mmap((stdlibsz + PAGE_SIZE - 1) / PAGE_SIZE);
+	memcpy(rawstdlib, ptr, stdlibsz);
+
+	ELF stdlib(rawstdlib, stdlibsz);
 	stdlib.doit();
+	// The following line is NOT actually used, it's just for relocate() to
+	//   not fail in case the "Careful now" scenario plays.
+	stdlib.give(stdlib, 0);
 	stdlib.finish();
 
-	ELF elf = stdlib;
+	// Send stdlib parse status and get size of new ELF @ ptr (it's overwritten)
+	size_t sz = backFromLoader(0, stdlib.getError(), 0);
 
-	// Keep receiving programs from the kernel and returning maps
-	PID lastPID = 0;
-	uint64_t lastEntry = 0;
 	while(true) {
-		size_t sz = backFromLoader(lastPID, elf.getError(), lastEntry);
-		lastPID = 0;
-		lastEntry = 0;
+		PID lastPID = 0;
+		uint64_t lastEntry = 0;
 
-		// "elf" has been freed if necessary. mapIn unmounted the pages
-		//   from Loader's page table, and all "ptr"-relative are overwritten
-		//   since backFromLoader returned.
-
-		elf = ELF(ptr, sz);
+		ELF elf(ptr, sz);
 		elf.doit();
 		if(elf.getError()) continue; // Any errors?
 
@@ -42,12 +42,25 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 				*(uint64_t*)0x420 = 0;
 			}
 
+			ELF& thelib = stdlib;
+
 			// Note for future me: when more libraries are supported, make sure
 			// there's a <set> for those loaded so, in case it's done recursively,
 			// none are loaded twice. Give it a thought.
-			elf.give(stdlib, aslrGet(lastPID, id));
+			elf.give(thelib, aslrGet(lastPID, id));
 
-			map(lastPID, stdlib, id, DO_COPY);
+			// Careful now: I've seen some ELFs that have a local GOT section.
+			// That is, a GOT for local functions. At the time I write this,
+			//   stdlib is one of them. In this case, it's necessary to
+			//   give() the library to itself. Weird stuff. This can't be done
+			//   before because ASLR hasn't set a region for it to be loaded at.
+			// It can be done multiple times though, specially in the stdlib
+			//   which is always loaded. It will just overwrite the pointers.
+			thelib.give(thelib, aslrGet(lastPID, id));
+			// Now, relocate it
+			thelib.finish();
+
+			map(lastPID, thelib, id, DO_COPY);
 
 			++id;
 		}
@@ -57,6 +70,7 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 		lastEntry = aslrGet(lastPID, 0) + elf.getEntry();
 		map(lastPID, elf, 0);
 
-		// TODO: RELRO
+		// That's it
+		sz = backFromLoader(lastPID, elf.getError(), lastEntry);
 	}
 }

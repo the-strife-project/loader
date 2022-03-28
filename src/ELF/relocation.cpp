@@ -18,10 +18,6 @@ void ELF::relocation() {
 
 	// Safe to dereference :)
 
-	// At this point, there has to be something in "libs"
-	if(!libs.size())
-		return;
-
 	RelocationEntry* entries = (RelocationEntry*)(data + got->sh_offset);
 	size_t nentries = got->sh_size / sizeof(RelocationEntry);
 
@@ -36,15 +32,14 @@ void ELF::relocation() {
 
 		uint32_t symidx = entry->r_info >> 32;
 
-		// Name ok?
-		// dynstr is safe since neededLibs() finished without errors
-		// neededLibs() has been executed because "libs" is not empty
 		if(symidx >= ndynsyms) {
 			error = std::Loader::Error::INVALID_OFFSET;
 			return;
 		}
 
-		// Safe to dereference since it was checked in findExports
+		// Safe to dereference since it was checked in findExports,
+		//   which surely was called. Otherwise, ndynsyms would be zero, and
+		//   it would've returned above.
 		std::string name = data + dynstr->sh_offset + rawdynsyms[symidx].st_name;
 
 		// Is the symbol exported by a needed library?

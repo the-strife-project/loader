@@ -1,12 +1,10 @@
 #ifndef BASICS_HPP
 #define BASICS_HPP
 
-inline void memcpy(void* dst, void* src, size_t count) {
-	asm volatile("cld\nrep movsb" :: "D"(dst), "S"(src), "c"(count));
-}
+#include <types>
 
-inline void memset(void* dst, char c, size_t count) {
-	asm volatile("cld\nrep stosb" :: "D"(dst), "S"(c), "c"(count));
-}
+extern "C" void* memcpy(void* dst, void* src, size_t count);
+extern "C" void* memmove(void* dst, void* src, size_t count);
+extern "C" void* memset(void* dst, char c, size_t count);
 
 #endif
