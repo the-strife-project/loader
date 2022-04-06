@@ -1,7 +1,8 @@
 export PROJNAME := loader
 export RESULT := loader.elf
-# There's no stdlib yet
-export nostdlib := true
+
+# stdlib needs to be statically linked
+export static := true
 
 all: loader.sus
 
