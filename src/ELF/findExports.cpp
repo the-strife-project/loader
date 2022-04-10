@@ -49,6 +49,4 @@ void ELF::findExports() {
 		//   it's not, program will crash, but loader will be safe either way
 		exported[name] = sym->st_value;
 	}
-
-	// TODO: not all symbols in .dynsym are exported! Some are imported! Should check st_value.
 }

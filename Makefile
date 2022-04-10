@@ -1,6 +1,9 @@
 export PROJNAME := loader
 export RESULT := loader.elf
 
+# Go read kernel's <tasks/loader/bootstrap.cpp> about this
+export LINKER_FLAGS := -Ttext-segment=0x1000
+
 # stdlib needs to be statically linked
 export static := true
 

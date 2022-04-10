@@ -28,7 +28,10 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 
 		ELF elf(ptr, sz);
 		elf.doit();
-		if(elf.getError()) continue; // Any errors?
+		if(elf.getError()) {
+			sz = backFromLoader(0, elf.getError(), 0);
+			continue;
+		}
 
 		// Need to create it now so ASLR can do its thing
 		lastPID = makeProcess();

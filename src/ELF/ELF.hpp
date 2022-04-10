@@ -2,8 +2,8 @@
 #define ELF_HPP
 
 #include <types>
-#include <set>
-#include <map>
+#include <unordered_set>
+#include <unordered_map>
 #include <string>
 #include "structures.hpp"
 #include <loader> // From stdlib, contains error struct
