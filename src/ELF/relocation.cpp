@@ -6,26 +6,18 @@ void ELF::give(ELF& elf, uint64_t base) {
 		whoGives[x.f] = base + x.s;
 }
 
+// Two supported relocation types
+// Don't know the difference at all
+// First one seems to be in .rela.plt, second one in .rela.dyn
 #define R_X86_64_JUMP_SLOT 0x7
+#define R_X86_64_GLOB_DAT 0x6
 
-void ELF::relocation() {
-	// Find GOT entries
-	SHDR* got = mapSections[".rela.plt"];
-
-	if(!got)
-		return;
-	// Might need to check REL as well, ".rel.dyn"
-
-	// Safe to dereference :)
-
-	RelocationEntry* entries = (RelocationEntry*)(data + got->sh_offset);
-	size_t nentries = got->sh_size / sizeof(RelocationEntry);
-
+void ELF::relocateRELA(RELA* entries, size_t nentries) {
 	for(size_t i=0; i<nentries; ++i) {
-		RelocationEntry* entry = &entries[i];
+		RELA* entry = &entries[i];
 
 		uint32_t type = entry->r_info & 0xFFFFFFFF;
-		if(type != R_X86_64_JUMP_SLOT) {
+		if(type != R_X86_64_JUMP_SLOT && type != R_X86_64_GLOB_DAT) {
 			error = std::Loader::Error::UNSUPPORTED_RELOCATION;
 			return;
 		}
@@ -58,5 +50,26 @@ void ELF::relocation() {
 		// Alright, perform the relocation
 		local |= entry->r_offset & 0xFFF;
 		*(uint64_t*)local = whoGives[name];
+	}
+}
+
+void ELF::relocation() {
+	SHDR* plt = mapSections[".rela.plt"];
+	if(plt) {
+		RELA* entries = (RELA*)(data + plt->sh_offset);
+		size_t nentries = plt->sh_size / sizeof(RELA);
+		relocateRELA(entries, nentries);
+	}
+
+	SHDR* dyn = mapSections[".rela.dyn"];
+	if(dyn) {
+		RELA* entries = (RELA*)(data + dyn->sh_offset);
+		size_t nentries = dyn->sh_size / sizeof(RELA);
+		// Hacking: skip first entry. Why? idk
+		// It has a weird relocation type (R_X86_64_RELATIVE)
+		++entries;
+		--nentries;
+		if(nentries)
+			relocateRELA(entries, nentries);
 	}
 }

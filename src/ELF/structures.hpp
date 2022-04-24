@@ -101,10 +101,12 @@ struct Dynamic {
 	};
 } __attribute__ ((packed));
 
-struct RelocationEntry {
+struct RELA {
 	uint64_t r_offset;
 	uint64_t r_info;
 	uint64_t r_addend;
 } __attribute__ ((packed));
+
+
 
 #endif

@@ -59,7 +59,10 @@ private:
 	void parseSections(); // SHDRs, fills "mapSections"
 	void findExports(); // Exported symbols, fills "dynsyms"
 	void findNeededLibs(); // Shared objects, fills "libs"
+
+	void relocateRELA(RELA*, size_t n);
 	void relocation();
+
 	void setPermissions();
 
 public:
