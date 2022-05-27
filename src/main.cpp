@@ -4,7 +4,7 @@
 #include "syscalls.hpp"
 
 #define DO_COPY true
-void map(PID pid, ELF& elf, size_t id, bool copy=false);
+void map(std::PID pid, ELF& elf, size_t id, bool copy=false);
 
 extern "C" void _start(void* ptr, size_t stdlibsz) {
 	// This loader starts loading stdlib and caching it
@@ -23,7 +23,7 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 	size_t sz = backFromLoader(0, stdlib.getError(), 0);
 
 	while(true) {
-		PID lastPID = 0;
+		std::PID lastPID = 0;
 		uint64_t lastEntry = 0;
 
 		ELF elf(ptr, sz);

@@ -2,7 +2,7 @@
 #include "syscalls.hpp"
 #include <basics.hpp>
 
-void map(PID pid, ELF& elf, size_t id, bool copy) {
+void map(std::PID pid, ELF& elf, size_t id, bool copy) {
 	uint64_t base = aslrGet(pid, id);
 
 	for(auto const& x : elf.getPages()) {

@@ -6,7 +6,7 @@
 
 // Syscalls only used by the loader
 
-inline size_t backFromLoader(PID pid, size_t err, uint64_t entry) {
+inline size_t backFromLoader(std::PID pid, size_t err, uint64_t entry) {
 	size_t ret;
 	asm volatile("push %%r10\n"
 				 "mov %[nr10], %%r10\n"
@@ -21,8 +21,8 @@ inline size_t backFromLoader(PID pid, size_t err, uint64_t entry) {
 	return ret;
 }
 
-inline PID makeProcess() {
-	PID ret;
+inline std::PID makeProcess() {
+	std::PID ret;
 	asm volatile("syscall"
 				 : "=a" (ret)
 				 : "D" (std::Syscalls::MAKE_PROCESS)
@@ -30,7 +30,7 @@ inline PID makeProcess() {
 	return ret;
 }
 
-inline uint64_t aslrGet(PID pid, size_t id, size_t npages=0) {
+inline uint64_t aslrGet(std::PID pid, size_t id, size_t npages=0) {
 	uint64_t ret;
 	asm volatile("push %%r10\n"
 				 "mov %[nr10], %%r10\n"
@@ -47,7 +47,7 @@ inline uint64_t aslrGet(PID pid, size_t id, size_t npages=0) {
 
 #define MAP_IN_WRITE (1 << 0)
 #define MAP_IN_EXEC  (1 << 1)
-inline bool mapIn(PID pid, uint64_t local, uint64_t remote) {
+inline bool mapIn(std::PID pid, uint64_t local, uint64_t remote) {
 	// Protection is given in lower bits of "remote"
 	uint64_t ret;
 	asm volatile("push %%r10\n"
