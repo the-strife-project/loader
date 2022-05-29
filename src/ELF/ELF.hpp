@@ -61,6 +61,8 @@ private:
 	void findNeededLibs(); // Shared objects, fills "libs"
 
 	void relocateRELA(RELA*, size_t n);
+	void relocateSymbol(RELA*);
+	void relocateRelative(RELA*);
 	void relocation();
 
 	void setPermissions();
