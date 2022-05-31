@@ -81,7 +81,7 @@ void ELF::parseAndLoad() {
 				if(!pages[page]) {
 					// TODO: just panic and free everything
 					error = std::Loader::Error::NO_MEMORY;
-					*(uint64_t*)0x69 = 0;
+					HALT_AND_CATCH_FIRE();
 					while(true);
 				}
 			}

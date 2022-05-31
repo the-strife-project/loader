@@ -41,7 +41,7 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 		for(auto const& x : elf.getLibs()) {
 			if(x != "libstd.so") {
 				// TODO (clearly)
-				*(uint64_t*)0x420 = 0;
+				HALT_AND_CATCH_FIRE();
 			}
 
 			ELF& thelib = stdlib;
