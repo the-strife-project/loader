@@ -24,6 +24,9 @@ void ELF::parseSections() {
 		SHDR* section = &sections[i];
 		if(section->sh_size == 0) continue;
 
+		// Exception: skip ".bss" section (validRegion might fail!)
+		if(section->sh_type == SHT_NOBITS) continue;
+
 		if(!validRegion(section->sh_offset, section->sh_size)) {
 			error = std::Loader::Error::INVALID_OFFSET;
 			return;

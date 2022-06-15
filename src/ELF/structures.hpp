@@ -78,6 +78,9 @@ struct SHDR {
 	};
 } __attribute__ ((packed));
 
+// This is the sh_type value of .bss sections
+#define SHT_NOBITS 0x08
+
 struct Symbol {
 	uint32_t st_name;
 	uint8_t st_info;

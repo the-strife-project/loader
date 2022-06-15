@@ -7,7 +7,10 @@ export LINKER_FLAGS := -Ttext-segment=0x1000
 # stdlib needs to be statically linked
 export static := true
 
+.PHONY: all
+
 all: loader.sus
+	@
 
 loader.sus: $(RESULT)
 	@echo "[Loader] Creating SUS..."
