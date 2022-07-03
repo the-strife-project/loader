@@ -18,6 +18,8 @@ void map(std::PID pid, ELF& elf, size_t id, bool copy) {
 
 		if(copy) {
 			void* newlocal = std::mmap();
+			if(!newlocal)
+				HALT_AND_CATCH_FIRE(); // TODO: don't panic please
 			memcpy(newlocal, (void*)local, PAGE_SIZE);
 			local = (uint64_t)newlocal;
 		}
