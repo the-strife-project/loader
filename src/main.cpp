@@ -6,6 +6,8 @@
 #define DO_COPY true
 void map(std::PID pid, ELF& elf, size_t id, bool copy=false);
 
+size_t loadedCounter = 0;
+
 extern "C" void _start(void* ptr, size_t stdlibsz) {
 	// This loader starts loading stdlib and caching it
 	// There would be no need to copy the whole ELF, but... Read "Careful now".
@@ -20,6 +22,7 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 	stdlib.finish();
 
 	// Send stdlib parse status and get size of new ELF @ ptr (it's overwritten)
+	++loadedCounter;
 	size_t sz = backFromLoader(0, stdlib.getError(), 0);
 
 	while(true) {
@@ -73,6 +76,7 @@ extern "C" void _start(void* ptr, size_t stdlibsz) {
 		map(lastPID, elf, 0);
 
 		// That's it
+		++loadedCounter;
 		sz = backFromLoader(lastPID, elf.getError(), lastEntry);
 	}
 }

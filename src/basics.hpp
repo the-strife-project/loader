@@ -3,4 +3,6 @@
 
 #include <types>
 
+extern size_t loadedCounter;
+
 #endif

@@ -76,9 +76,9 @@ void ELF::parseAndLoad() {
 		while(npages--) {
 			// If the page is not allocated, do it now
 			size_t page = vaddr & ~0xFFF;
-			if(!pages[page]) {
+			if(!pages.has(page)) {
 				pages[page] = (size_t)std::mmap();
-				if(!pages[page]) {
+				if(!pages.has(page)) {
 					// TODO: just panic and free everything
 					error = std::Loader::Error::NO_MEMORY;
 					HALT_AND_CATCH_FIRE();
