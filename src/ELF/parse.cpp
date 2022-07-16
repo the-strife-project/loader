@@ -75,7 +75,7 @@ void ELF::parseAndLoad() {
 
 		while(npages--) {
 			// If the page is not allocated, do it now
-			size_t page = vaddr & ~0xFFF;
+			size_t page = PAGE(vaddr);
 			if(!pages.has(page)) {
 				pages[page] = (size_t)std::mmap();
 				if(!pages.has(page)) {
@@ -87,14 +87,14 @@ void ELF::parseAndLoad() {
 			}
 
 			// Copy time
-			void* dst = (void*)(pages[page] + (vaddr & 0xFFF));
+			void* dst = (void*)(pages[page] + PAGEOFF(vaddr));
 			// Remaining bytes until the end of the page
-			size_t szFile = std::min(PAGE_SIZE - (vaddr & 0xFFF), remainingFile);
+			size_t szFile = std::min(PAGE_SIZE - PAGEOFF(vaddr), remainingFile);
 			memcpy(dst, faddr, szFile);
 			faddr += szFile;
 			remainingFile -= szFile;
 
-			size_t szMem = std::min(PAGE_SIZE - (vaddr & 0xFFF), remainingMem);
+			size_t szMem = std::min(PAGE_SIZE - PAGEOFF(vaddr), remainingMem);
 			vaddr += szMem;
 			remainingMem -= szMem;
 		}

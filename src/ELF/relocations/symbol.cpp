@@ -20,13 +20,13 @@ void ELF::relocateSymbol(RELA* entry) {
 	}
 
 	// Offset ok?
-	if(!pages.has(entry->r_offset & ~0xFFF)) {
+	if(!pages.has(PAGE(entry->r_offset))) {
 		error = std::Loader::Error::INVALID_OFFSET;
 		return;
 	}
-	uint64_t local = pages[entry->r_offset & ~0xFFF];
+	uint64_t local = pages[PAGE(entry->r_offset)];
 
 	// Alright, perform the relocation
-	local |= entry->r_offset & 0xFFF;
+	local |= PAGEOFF(entry->r_offset);
 	*(uint64_t*)local = whoGives[name];
 }

@@ -7,7 +7,7 @@ void ELF::setPermissions() {
 		PHDR* phdr = &phdrs[i];
 		// Safe since parse.cpp
 
-		uint64_t page = phdr->p_vaddr & ~0xFFF;
+		uint64_t page = PAGE(phdr->p_vaddr);
 		size_t npages = phdr->npages();
 		for(size_t i=0; i<npages; ++i) {
 			perms[page] = phdr->p_flags & 0b111;

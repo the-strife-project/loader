@@ -49,8 +49,8 @@ struct PHDR {
 
 	// How many pages are involved in this program header?
 	inline size_t npages() {
-		size_t ret = (p_vaddr + p_memsz - 1) & ~0xFFF;
-		ret -= p_vaddr & ~0xFFF;
+		size_t ret = PAGE(p_vaddr + p_memsz - 1);
+		ret -= PAGE(p_vaddr);
 		ret += PAGE_SIZE;
 		ret /= PAGE_SIZE;
 		return ret;
