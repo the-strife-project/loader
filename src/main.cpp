@@ -11,7 +11,7 @@ size_t loadedCounter = 0;
 extern "C" void _start(void* ptr, size_t stdlibsz) {
 	// This loader starts loading stdlib and caching it
 	// There would be no need to copy the whole ELF, but... Read "Careful now".
-	void* rawstdlib = std::mmap((stdlibsz + PAGE_SIZE - 1) / PAGE_SIZE);
+	void* rawstdlib = std::mmap(NPAGES(stdlibsz));
 	memcpy(rawstdlib, ptr, stdlibsz);
 
 	ELF stdlib(rawstdlib, stdlibsz);
